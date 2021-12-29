@@ -8,6 +8,7 @@ import (
 	"github.com/go-kit/kit/log/level"
 	"golang.org/x/time/rate"
 
+	"github.com/dieqnt/skeleton/api/root"
 	"github.com/dieqnt/skeleton/api/template"
 	"github.com/dieqnt/skeleton/db/elasticsearch"
 	"github.com/dieqnt/skeleton/db/mssql"
@@ -44,12 +45,15 @@ func New(cfg *Config) (*ServerHTTP, error) {
 		srv:    srv,
 	}
 
+	svcRoot := &root.BasicService{}
+	handlerRoot := root.NewHandler(svcRoot, cfg.Logger, cfg.RateLimiter)
+	mux.Handle("/", accessControl(handlerRoot))
+
 	svcTemplate := &template.BasicService{
 		Logger:  cfg.Logger,
 		DBES:    cfg.DBES,
 		DBMsSQL: cfg.DBMsSQL,
 	}
-
 	handler := template.NewHandler(svcTemplate, cfg.Logger, cfg.RateLimiter)
 	mux.Handle("/api/internal/v1/templatemicroservice/", accessControl(handler))
 

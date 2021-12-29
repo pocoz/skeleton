@@ -1,10 +1,9 @@
-package template
+package root
 
 import (
 	"net/http"
 
 	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/transport"
 	kithttp "github.com/go-kit/kit/transport/http"
 	"github.com/gorilla/mux"
 	"golang.org/x/time/rate"
@@ -20,17 +19,16 @@ func NewHandler(srv service, logger log.Logger, limiter *rate.Limiter) http.Hand
 	)
 
 	opts := []kithttp.ServerOption{
-		kithttp.ServerErrorHandler(transport.NewLogErrorHandler(logger)),
 		kithttp.ServerErrorEncoder(dto.EncodeError),
 	}
 
-	templateEndpoint := makeTemplateEndpoint(svc)
-	templateEndpoint = dto.ApplyMiddleware(templateEndpoint, limiter)
+	healthCheckEndpoint := makeHealthyEndpoint(svc)
+	healthCheckEndpoint = dto.ApplyMiddleware(healthCheckEndpoint, limiter)
 
-	router.Path("/api/internal/v1/templatemicroservice/do/something").Methods(http.MethodPost).Handler(kithttp.NewServer(
-		templateEndpoint,
-		decodeTemplateRequest,
-		encodeTemplateResponse,
+	router.Path("/healthy").Methods(http.MethodGet).Handler(kithttp.NewServer(
+		healthCheckEndpoint,
+		decodeHealthyRequest,
+		encodeHealthyResponse,
 		opts...,
 	))
 

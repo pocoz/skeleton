@@ -4,6 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+
+	"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/kit/ratelimit"
+	"golang.org/x/time/rate"
 )
 
 type basicRequest struct {
@@ -50,4 +54,8 @@ func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(NewBasicResponse(true, err, nil))
+}
+
+func ApplyMiddleware(e endpoint.Endpoint, limiter *rate.Limiter) endpoint.Endpoint {
+	return ratelimit.NewErroringLimiter(limiter)(e)
 }
