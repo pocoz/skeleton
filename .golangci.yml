@@ -1,0 +1,127 @@
+# golangci.com configuration
+# https://github.com/golangci/golangci/wiki/Configuration
+service:
+  golangci-lint-version: 1.23.x # use the fixed version to not introduce new linters unexpectedly
+  prepare:
+    - echo "here I can run custom commands, but no preparation needed for this repo"
+
+run:
+  concurrency: 4
+  timeout: 1m
+  issues-exit-code: 1
+  skip-dirs:
+    - build
+    - vendor
+    - var
+    - tmp
+    - cmd/csvPropsImorterd
+
+# output configuration options
+output:
+  format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+  uniq-by-line: true
+  path-prefix: ""
+  sort-results: false
+
+linters-settings:
+  dupl:
+    threshold: 150
+  funlen:
+    lines: 140
+    statements: 140
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - dupImport # https://github.com/go-critic/go-critic/issues/845
+      - unnecessaryBlock
+      - whyNoLint
+  govet:
+    check-shadowing: false
+    settings:
+      printf:
+        funcs:
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Infof
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Warnf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Errorf
+          - (github.com/golangci/golangci-lint/pkg/logutils.Log).Fatalf
+  lll:
+    line-length: 140
+  maligned:
+    suggest-new: true
+  misspell:
+    locale: US
+  errorlint:
+    errorf: false
+    asserts: true
+    comparison: true
+  exhaustive:
+    check-generated: false
+    # indicates that switch statements are to be considered exhaustive if a
+    # 'default' case is present, even if all enum members aren't listed in the
+    # switch
+    default-signifies-exhaustive: false
+  errcheck:
+    ignore: fmt:.*,github.com/go-kit/kit/log:^Log.*
+
+linters:
+  # please, do not use `enable-all`: it's deprecated and will be removed soon.
+  # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
+  disable-all: true
+  enable:
+    - gofmt # Gofmt checks whether code was gofmt-ed. By default this tool runs with -s option to check for code simplification [fast: true, auto-fix: true]
+    - bodyclose # checks whether HTTP response body is closed successfully [fast: true, auto-fix: false]
+    - deadcode # Finds unused code [fast: true, auto-fix: false]
+    - dogsled # Checks assignments with too many blank identifiers (e.g. x, _, _, _, := f()) [fast: true, auto-fix: false]
+    - dupl # Tool for code clone detection [fast: true, auto-fix: false]
+    - errcheck # Errcheck is a program for checking for unchecked errors in go programs. These unchecked errors can be critical bugs in some cases [fast: true, auto-fix: false]
+    - goconst # Finds repeated strings that could be replaced by a constant [fast: true, auto-fix: false]
+    - goprintffuncname # Checks that printf-like functions are named with `f` at the end [fast: true, auto-fix: false]
+    - gosimple # Linter for Go source code that specializes in simplifying a code [fast: true, auto-fix: false]
+    - govet # Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string
+    - ineffassign # Detects when assignments to existing variables are not used [fast: true, auto-fix: false]
+    - misspell # Finds commonly misspelled English words in comments [fast: true, auto-fix: true]
+    - nakedret # Finds naked returns in functions greater than a specified function length [fast: true, auto-fix: false]
+    - staticcheck # Staticcheck is a go vet on steroids, applying a ton of static analysis checks [fast: true, auto-fix: false]
+    - structcheck # Finds unused struct fields [fast: true, auto-fix: false]
+    - unconvert # Remove unnecessary type conversions [fast: true, auto-fix: false]
+    - unparam # Reports unused function parameters [fast: true, auto-fix: false]
+    - unused # Checks Go code for unused constants, variables, functions and types [fast: false, auto-fix: false]
+    - varcheck # Finds unused global variables and constants [fast: true, auto-fix: false]
+    - errorlint # Finds code that will cause problems with the error wrapping scheme introduced in Go 1.13.
+    - nilerr # Finds the code that returns nil even if it checks that the error is not nil.
+    - nlreturn # Checks for a new line before return and branch statements to increase code clarity
+    - noctx # Finds sending http request without context.Context
+    - sqlclosecheck # Checks that sql.Rows and sql.Stmt are closed.
+    - goimports # In addition to fixing imports, goimports also formats your code in the same style as gofmt.
+    - revive # Basic Go linter
+
+  # don't enable:
+  # - gochecknoglobals
+  # - godox
+  # - maligned
+
+issues:
+  # Excluding configuration per-path, per-linter, per-text and per-source
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gomnd
+        - dupl
+        - lll
+  exclude:
+    - S1038 # should use fmt.Printf instead of fmt.Println(fmt.Sprintf(...))
+    - unexported-return
+    - blank-imports
+    - should rewrite http.NewRequestWithContext # noctx linter
+    - .Get must not be called # noctx linter
+    - SA5001 # should check returned error before deferring rows.Close()

@@ -1,0 +1,83 @@
+stages: 
+  - build
+  - vault_secrets
+  - deploy_test
+  - deploy_prod
+
+workflow: 
+  rules: 
+    # disable pipeline for merge requests and master branch
+    - if:  "$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME || $CI_COMMIT_REF_NAME == 'master'"
+      when:  never
+    - when:  always
+
+build: 
+  stage:  build
+  script: 
+    - bash .gitlab-ci/docker_build.sh
+  tags: 
+    - shell-runner
+  when:  always
+  only: 
+    - /^release.*$/
+    - tags
+  except: 
+    - branches
+
+# Retrieve the secret variables from hashicorp vault
+include:  
+  - local:  '.gitlab-ci/vault.yml'
+
+# Деплой настраиваем, естесвенно со своими параметрами
+#deploy test:
+#  stage:  deploy_test
+#  dependencies:
+#    - build
+#    - vault_secrets_test
+#  script:
+#    - bash .gitlab-ci/docker_deploy.sh
+#  tags:
+#    - shell-runner
+#  variables:
+#    FLUENTD_ADDRESS: ${FLUENTD_HAPROXY_HOST_TEST}
+#    CONTAINER_NAME: ${CONTAINER_NAME}
+#    ELASTIC_USER: ${ELASTIC_USER_TEST}
+#    ELASTIC_PASSWORD: ${ELASTIC_PASSWORD_TEST}
+#    SQL_USER: ${SQL_USER_TEST}
+#    SQL_PASSWORD: ${SQL_PASSWORD_TEST}
+#    API_KEY_ACCESS: ${API_KEY_ACCESS_TEST}
+#    API_KEY_SECRET: ${API_KEY_SECRET_TEST}
+#  environment:
+#    name:  test
+#  when:  manual
+#  only:
+#    - /^release.*$/
+#    - tags
+#  except:
+#    - branches
+
+# deploy prod port 1: 
+#   stage:  deploy_prod
+#   dependencies: 
+#     - build
+#     - vault_secrets_prod
+#   variables: 
+#     FLUENTD_ADDRESS: ${FLUENTD_HAPROXY_HOST_PROD}
+#     CONTAINER_NAME: ${CONTAINER_NAME}
+#     ELASTIC_USER: ${ELASTIC_USER_PROD}
+#     ELASTIC_PASSWORD: ${ELASTIC_PASSWORD_PROD}
+#     SQL_USER: ${SQL_USER_PROD}
+#     SQL_PASSWORD: ${SQL_PASSWORD_PROD}
+#     API_KEY_ACCESS: ${API_KEY_ACCESS_PROD}
+#     API_KEY_SECRET: ${API_KEY_SECRET_PROD}
+#   environment:  prod
+#   when:  manual
+#   script: 
+#     - bash .gitlab-ci/docker_deploy.sh
+#   tags: 
+#     - shell-runner
+#   only: 
+#     - /^release.*$/
+#     - tags
+#   except: 
+#     - branches

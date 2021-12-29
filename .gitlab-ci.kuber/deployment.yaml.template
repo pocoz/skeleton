@@ -1,0 +1,136 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${APP}
+  namespace: ${KUBE_NAMESPACE}
+  labels:
+    k8s-app: ${APP}
+    version: v1
+spec:
+  replicas: 0
+  selector:
+    matchLabels:
+      k8s-app: ${APP}
+      version: v1
+  template:
+    metadata:
+      labels:
+        k8s-app: ${APP}
+        version: v1
+    spec:
+      containers:
+        - name: ${APP}
+          image: ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:${CI_COMMIT_REF_SLUG}-${CI_PIPELINE_ID}
+          resources:
+            limits:
+              memory: 4096Mi
+              cpu: 100m
+            requests:
+              cpu: 100m
+              memory: 2048Mi
+          envFrom:
+            - configMapRef:
+                name: ${APP}
+            - secretRef:
+                name: ${APP}
+        - name: ${APP}-vector
+          image: docker-registry.prod.lan/vector:k8s
+          imagePullPolicy: Always
+          resources:
+            limits:
+              memory: 200Mi
+              cpu: 100m
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          env:
+            - name: VECTOR_CONFIG_YAML
+              value: "/etc/vector/vector.yaml"
+          envFrom:
+            - configMapRef:
+                name: ${APP}-vector-env
+            - secretRef:
+                name: elasticsearch
+          volumeMounts:
+            - name: varlog
+              mountPath: /var/log
+      volumes:
+        - name: varlog
+          hostPath:
+            path: /var/log/pods
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k8s-app: ${APP}
+    version: v1
+  name: ${APP}
+  namespace: ${KUBE_NAMESPACE}
+spec:
+  ports:
+    - name: "${HTTP_PORT}"
+      port: ${HTTP_PORT}
+      targetPort: ${HTTP_PORT}
+  selector:
+    k8s-app: ${APP}
+    version: v1
+status:
+  loadBalancer: {}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ${APP}-ingress
+  namespace: ${KUBE_NAMESPACE}
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+    - host: ${APP}.k8s.test.goods.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ${APP}
+                port:
+                  number: ${HTTP_PORT}
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: ${APP}
+  namespace: ${KUBE_NAMESPACE}
+data:
+  BASE_SUB_FOLDER: "${BASE_SUB_FOLDER}"
+  CRON_PATTERN_MAKER: "${CRON_PATTERN_MAKER}"
+  ELASTIC_SERVER: "${ELASTIC_SERVER}"
+  FLUENTD_SIDECAR_ADDRESS: "${FLUENTD_SIDECAR_ADDRESS}"
+  HTTP_PORT: "${HTTP_PORT}"
+  IS_DEVELOPMENT: "${IS_DEVELOPMENT}"
+  MAX_COUNT_PARTS: "${MAX_COUNT_PARTS}"
+  MINIO_BUCKET_NAME: "${MINIO_BUCKET_NAME}"
+  MINIO_FOLDER_NAME: "${MINIO_FOLDER_NAME}"
+  MINIO_URL: "${MINIO_URL}"
+  RATE_LIMIT_BURST: "${BQ_INFRA_RESULT_FILENAME_PREFIX}"
+  RATE_LIMIT_EVERY: "${RATE_LIMIT_EVERY}"
+  SITE_BASE_HOST: "${SITE_BASE_HOST}"
+  SQL_DATABASE_MALIBU: "${SQL_DATABASE_MALIBU}"
+  SQL_PORT_MALIBU: "${SQL_PORT_MALIBU}"
+  SQL_SERVER_MALIBU: "${SQL_SERVER_MALIBU}"
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: ${APP}
+  namespace: ${KUBE_NAMESPACE}
+stringData:
+  ELASTIC_USER: "${ELASTIC_USER}"
+  ELASTIC_PASSWORD: "${ELASTIC_PASSWORD}"
+  SQL_USER_MALIBU: "${SQL_USER_MALIBU}"
+  SQL_PASSWORD_MALIBU: "${SQL_PASSWORD_MALIBU}"
+  MINIO_SECRET_ACCESS_KEY: "${MINIO_SECRET_ACCESS_KEY}"
+  MINIO_ACCESS_KEY_ID: "${MINIO_SECRET_ACCESS_KEY}"

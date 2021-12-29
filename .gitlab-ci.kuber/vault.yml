@@ -1,0 +1,36 @@
+include:
+  project: 'goods/infrastructure/iaac/pipelines/common-pipelines'
+  ref: master
+  file: 'hashicorp-vault/.jwt-vault-secrets.yml'
+
+vault_secrets_test:
+  extends: .vault_secrets
+  stage: vault_secrets
+  variables:
+    file_with_secrets: vault_secrets_test.env
+  script:
+    - echo ELASTIC_USER="$(vault kv get -field=ELASTIC_USER secrets/goods/customers/sitemapmaker/test)" >> ${file_with_secrets}
+    - echo ELASTIC_PASSWORD="$(vault kv get -field=ELASTIC_PASSWORD secrets/goods/customers/sitemapmaker/test)" >> ${file_with_secrets}
+    - echo SQL_USER_MALIBU="$(vault kv get -field=SQL_USER_MALIBU secrets/goods/customers/sitemapmaker/test)" >> ${file_with_secrets}
+    - echo SQL_PASSWORD_MALIBU="$(vault kv get -field=SQL_PASSWORD_MALIBU secrets/goods/customers/sitemapmaker/test)" >> ${file_with_secrets}
+    - echo MINIO_SECRET_ACCESS_KEY="$(vault kv get -field=MINIO_SECRET_ACCESS_KEY secrets/goods/customers/sitemapmaker/test)" >> ${file_with_secrets}
+    - echo MINIO_ACCESS_KEY_ID="$(vault kv get -field=MINIO_ACCESS_KEY_ID secrets/goods/customers/sitemapmaker/test)" >> ${file_with_secrets}
+  only:
+    - /^release.*$/
+    - branches
+
+vault_secrets_prod:
+  extends: .vault_secrets
+  stage: vault_secrets
+  variables:
+    file_with_secrets: vault_secrets_prod.env
+  script:
+    - echo ELASTIC_USER="$(vault kv get -field=ELASTIC_USER secrets/goods/customers/sitemapmaker/prod)" >> ${file_with_secrets}
+    - echo ELASTIC_PASSWORD="$(vault kv get -field=ELASTIC_PASSWORD secrets/goods/customers/sitemapmaker/prod)" >> ${file_with_secrets}
+    - echo SQL_USER_MALIBU="$(vault kv get -field=SQL_USER_MALIBU secrets/goods/customers/sitemapmaker/prod)" >> ${file_with_secrets}
+    - echo SQL_PASSWORD_MALIBU="$(vault kv get -field=SQL_PASSWORD_MALIBU secrets/goods/customers/sitemapmaker/prod)" >> ${file_with_secrets}
+    - echo MINIO_SECRET_ACCESS_KEY="$(vault kv get -field=MINIO_SECRET_ACCESS_KEY secrets/goods/customers/sitemapmaker/prod)" >> ${file_with_secrets}
+    - echo MINIO_ACCESS_KEY_ID="$(vault kv get -field=MINIO_ACCESS_KEY_ID secrets/goods/customers/sitemapmaker/prod)" >> ${file_with_secrets}
+  only:
+    - /^release.*$/
+  when: manual

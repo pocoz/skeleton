@@ -1,0 +1,100 @@
+stages:
+  - vault_secrets
+  - build
+  - lint
+  - deploy_k8s_test
+  - deploy_k8s_prod
+
+workflow:
+  rules:
+    # disable pipeline for merge requests and master branch
+    - if: "$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME"
+      when: never
+    - when: always
+
+# Retrieve the secret variables from hashicorp vault
+include:
+  - local: '.gitlab-ci/vault.yml'
+
+build:
+  stage: build
+  # needs:
+  #   - build artifacts
+  script:
+    - bash .gitlab-ci/docker_build.sh
+  tags:
+    - shell-runner
+  only:
+    - /^release.*$/
+    - branches
+
+lint:
+  stage: lint
+  image: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
+  script:
+    - "[ -e .golangci.yml ] || cp /golangci/.golangci.yml ."
+    - golangci-lint run -c .golangci.yml --new-from-rev=HEAD~ --out-format code-climate | tee gl-code-quality-report.json | jq -r '.[] | "\(.location.path):\(.location.lines.begin) \(.description)"'
+  artifacts:
+    reports:
+      codequality: gl-code-quality-report.json
+    paths:
+      - gl-code-quality-report.json
+    expire_in: 1 week
+  allow_failure: true
+  tags:
+    - docker-runner
+
+deploy_k8s_test:
+  image: ${DOCKER_REGISTRY}/kubectl:latest
+  stage: deploy_k8s_test
+  before_script:
+    - envsubst < .gitlab-ci/deployment.yaml.template > ./deployment.yaml
+    - cat ./deployment.yaml
+    - touch ./.env.test
+  script:
+    - kubectl config set-cluster k8s --server="$KUBE_URL" --insecure-skip-tls-verify=true
+    - kubectl config set-credentials master-data --token="$KUBE_TOKEN_TEST"
+    - kubectl config set-context default --cluster=k8s --user=master-data
+    - kubectl config use-context default
+    - kubectl apply -f ./deployment.yaml
+  variables:
+    KUBE_URL: ${KUBE_TEST_API}
+    ENV: test
+  artifacts:
+    paths:
+      - ./${file_with_secrets}
+  environment:
+    name: test
+  tags:
+    - docker-runner
+  when: manual
+  dependencies:
+    - vault_secrets_test
+
+deploy_k8s_prod:
+  image: ${DOCKER_REGISTRY}/kubectl:latest
+  stage: deploy_k8s_prod
+  before_script:
+    - envsubst < .gitlab-ci/deployment.yaml.template > ./deployment.yaml
+    - cat ./deployment.yaml
+    - touch ./.env.prod
+  script:
+    - kubectl config set-cluster k8s --server="$KUBE_URL" --insecure-skip-tls-verify=true
+    - kubectl config set-credentials master-data --token="$KUBE_TOKEN_PROD"
+    - kubectl config set-context default --cluster=k8s --user=master-data
+    - kubectl config use-context default
+    - kubectl apply -f ./deployment.yaml
+  variables:
+    KUBE_URL: ${KUBE_PROD_API}
+    ENV: prod
+  artifacts:
+    paths:
+      - ./${file_with_secrets}
+  environment:
+    name: prod
+  tags:
+    - docker-runner
+  when: manual
+  dependencies:
+    - vault_secrets_prod
+

@@ -1,0 +1,45 @@
+{
+  "dynamic": "false",
+  "properties": {
+    "advanced_params": {
+      "properties": {
+        "fq": {
+          "type": "text",
+          "fields": {
+            "keyword": {
+              "type": "keyword",
+              "ignore_above": 256
+            }
+          }
+        }
+      }
+    },
+    "advanced_params_created_date": {
+      "type": "date"
+    },
+    "item_id": {
+      "type": "keyword",
+      "ignore_above": 255
+    },
+    "items": {
+      "type": "keyword",
+      "ignore_above": 255
+    },
+    "model": {
+      "type": "keyword",
+      "ignore_above": 255
+    },
+    "updated_date": {
+      "type": "date"
+    },
+    "visenze_response_errors": {
+      "type": "text",
+      "fields": {
+        "keyword": {
+          "type": "keyword",
+          "ignore_above": 256
+        }
+      }
+    }
+  }
+}

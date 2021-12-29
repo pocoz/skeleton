@@ -1,0 +1,44 @@
+### Get the vault credentials
+
+include:
+  project: 'goods/infrastructure/iaac/pipelines/common-pipelines'
+  ref: master
+  file: 'hashicorp-vault/.jwt-vault-secrets.yml'
+
+vault_secrets_test:
+  extends: .vault_secrets
+  stage: vault_secrets
+  variables: 
+    file_with_secrets: secrets1.env
+  script:
+    - echo ELASTIC_USER_TEST="$(vault kv get -field=user secrets/goods/customers/templatemicroservice/test/elastic)" >> ${file_with_secrets}
+    - echo ELASTIC_PASSWORD_TEST="$(vault kv get -field=pass secrets/goods/customers/templatemicroservice/test/elastic)" >> ${file_with_secrets}
+    - echo SQL_USER_TEST="$(vault kv get -field=user secrets/goods/customers/templatemicroservice/test/db_sql)" >> ${file_with_secrets}
+    - echo SQL_PASSWORD_TEST="$(vault kv get -field=pass secrets/goods/customers/templatemicroservice/test/db_sql)" >> ${file_with_secrets}
+    - echo API_KEY_ACCESS_TEST="$(vault kv get -field=access secrets/goods/customers/templatemicroservice/test/api)" >> ${file_with_secrets}
+    - echo API_KEY_SECRET_TEST="$(vault kv get -field=secret secrets/goods/customers/templatemicroservice/test/api)" >> ${file_with_secrets}
+  when:  always
+  only: 
+    - /^release.*$/
+    - tags
+  except: 
+    - branches
+
+vault_secrets_prod:
+  extends: .vault_secrets
+  stage: vault_secrets
+  variables: 
+    file_with_secrets: secrets2.env
+  script:
+    - echo ELASTIC_USER_PROD="$(vault kv get -field=user secrets/goods/customers/templatemicroservice/prod/elastic)" >> ${file_with_secrets}
+    - echo ELASTIC_PASSWORD_PROD="$(vault kv get -field=pass secrets/goods/customers/templatemicroservice/prod/elastic)" >> ${file_with_secrets}
+    - echo SQL_USER_PROD="$(vault kv get -field=user secrets/goods/customers/templatemicroservice/prod/db_sql)" >> ${file_with_secrets}
+    - echo SQL_PASSWORD_PROD="$(vault kv get -field=pass secrets/goods/customers/templatemicroservice/prod/db_sql)" >> ${file_with_secrets}
+    - echo API_KEY_ACCESS_PROD="$(vault kv get -field=access secrets/goods/customers/templatemicroservice/prod/api)" >> ${file_with_secrets}
+    - echo API_KEY_SECRET_PROD="$(vault kv get -field=secret secrets/goods/customers/templatemicroservice/prod/api)" >> ${file_with_secrets}
+  when:  always
+  only: 
+    - /^release.*$/
+    - tags
+  except: 
+    - branches
