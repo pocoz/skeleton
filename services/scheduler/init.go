@@ -3,9 +3,11 @@ package scheduler
 import (
 	"sync"
 
-	"github.com/dieqnt/skeleton/models"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
+	"github.com/robfig/cron"
+
+	"github.com/dieqnt/skeleton/models"
 )
 
 // Engine ...
@@ -57,7 +59,7 @@ func (s *Engine) createSafeCronTask(taskName string, targetFunc func() error) fu
 func (s *Engine) Run(tasks []*models.Task) error {
 	for _, task := range tasks {
 		if task.IsActive {
-			_, err := s.cron.AddFunc(task.CronPattern, s.createSafeCronTask(task.Name, task.Func))
+			err := s.cron.AddFunc(task.CronPattern, s.createSafeCronTask(task.Name, task.Func))
 			if err != nil {
 				return err
 			}
