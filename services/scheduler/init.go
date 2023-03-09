@@ -7,7 +7,7 @@ import (
 	"github.com/go-kit/kit/log/level"
 	"github.com/robfig/cron"
 
-	"github.com/dieqnt/skeleton/models"
+	"github.com/pocoz/skeleton/models"
 )
 
 // Engine ...

@@ -3,7 +3,7 @@
 set +x
 set -e
 
-TAG="${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:${CI_COMMIT_REF_SLUG}-${CI_PIPELINE_ID}"
+TAG="${DOCKER_REGISTRY}/${CI_PROJECT_NAME}:${CI_COMMIT_REF_SLUG}-${CI_PIPELINE_ID}"
 
 for host in ${DEPLOY_HOSTS}; do
         echo --- Deploying to "${host}" ---;
@@ -20,6 +20,11 @@ for host in ${DEPLOY_HOSTS}; do
             --dns "${NAMESERVER_0}" \
             --dns "${NAMESERVER_1}" \
             --restart unless-stopped \
+            --log-driver "${EVK_LOG_DRIVER}" \
+            --log-opt syslog-address=tcp://"${VECTOR_HAPROXY_HOST}":"${VECTOR_HAPROXY_SERVICE_PORT}" \
+            --log-opt syslog-format="${EVK_FORMAT_LOG}" \
+            --log-opt mode="${EVK_LOG_MODE}"\
+            --log-opt tag="${VECTOR_TAG}"  \
             -p "${HTTP_PORT}":"${HTTP_PORT}" \
             -e ELASTIC_SERVER \
             -e ELASTIC_USER \
@@ -42,7 +47,6 @@ for host in ${DEPLOY_HOSTS}; do
             -e RATE_LIMIT_EVERY \
             -e RATE_LIMIT_BURST \
             -e IS_DEVELOPMENT \
-            -e FLUENTD_SIDECAR_ADDRESS \
             "${TAG}" > /dev/null;
           echo "Successfully deployed"
         else

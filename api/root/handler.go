@@ -8,7 +8,7 @@ import (
 	"github.com/gorilla/mux"
 	"golang.org/x/time/rate"
 
-	"github.com/dieqnt/skeleton/api/dto"
+	"github.com/pocoz/skeleton/api/dto"
 )
 
 // NewHandler creates a new http handler serving services endpoints.

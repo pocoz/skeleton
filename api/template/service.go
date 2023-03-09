@@ -5,9 +5,9 @@ import (
 
 	"github.com/go-kit/kit/log"
 
-	"github.com/dieqnt/skeleton/db/elasticsearch"
-	"github.com/dieqnt/skeleton/db/mssql"
-	"github.com/dieqnt/skeleton/models"
+	"github.com/pocoz/skeleton/db/elasticsearch"
+	"github.com/pocoz/skeleton/db/mssql"
+	"github.com/pocoz/skeleton/models"
 )
 
 type BasicService struct {

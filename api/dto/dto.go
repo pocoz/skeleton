@@ -15,24 +15,44 @@ type basicRequest struct {
 	Meta interface{} `json:"meta"`
 }
 
-type basicResponse struct {
+type BasicResponse struct {
 	Success int         `json:"success"`
 	Data    interface{} `json:"data"`
 	Meta    interface{} `json:"meta"`
 }
 
-func NewBasicResponse(isError bool, data interface{}, meta interface{}) *basicResponse {
-	response := new(basicResponse)
-	response.Success = 1
-	if isError {
+type BasicReject struct {
+	Success int         `json:"success"`
+	Data    DataReject  `json:"data"`
+	Meta    interface{} `json:"meta"`
+}
+
+type DataReject struct {
+	Err interface{} `json:"err"`
+}
+
+func NewBasicResponse(isError bool, data interface{}, meta interface{}) interface{} {
+	if !isError {
+		response := new(BasicResponse)
+		response.Success = 1
+		response.Data = data
+		if meta == nil {
+			meta = &struct{}{}
+		}
+		response.Meta = meta
+
+		return response
+	} else {
+		response := new(BasicReject)
 		response.Success = 0
+		response.Data.Err = data
+		if meta == nil {
+			meta = &struct{}{}
+		}
+		response.Meta = meta
+
+		return response
 	}
-	response.Data = data
-	if meta == nil {
-		meta = &struct{}{}
-	}
-	response.Meta = meta
-	return response
 }
 
 func DecodeBasicRequest(r *http.Request) ([]byte, error) {

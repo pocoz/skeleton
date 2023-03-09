@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-kit/kit/log/level"
 
-	"github.com/dieqnt/skeleton/models"
+	"github.com/pocoz/skeleton/models"
 )
 
 func (e *Engine) GetOffersByItems(items []*models.YourStruct) (*models.OffersSyncMap, []*models.Offer, error) {

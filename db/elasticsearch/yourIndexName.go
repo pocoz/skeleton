@@ -2,11 +2,11 @@ package elasticsearch
 
 import (
 	"encoding/json"
-	"github.com/dieqnt/skeleton/tools"
+	"github.com/pocoz/skeleton/tools"
 
 	"github.com/olivere/elastic"
 
-	"github.com/dieqnt/skeleton/models"
+	"github.com/pocoz/skeleton/models"
 )
 
 const (

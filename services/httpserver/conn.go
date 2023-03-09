@@ -8,10 +8,10 @@ import (
 	"github.com/go-kit/kit/log/level"
 	"golang.org/x/time/rate"
 
-	"github.com/dieqnt/skeleton/api/root"
-	"github.com/dieqnt/skeleton/api/template"
-	"github.com/dieqnt/skeleton/db/elasticsearch"
-	"github.com/dieqnt/skeleton/db/mssql"
+	"github.com/pocoz/skeleton/api/root"
+	"github.com/pocoz/skeleton/api/template"
+	"github.com/pocoz/skeleton/db/elasticsearch"
+	"github.com/pocoz/skeleton/db/mssql"
 )
 
 // ServerHTTP is a services http server

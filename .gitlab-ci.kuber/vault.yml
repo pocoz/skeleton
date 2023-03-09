@@ -18,6 +18,7 @@ vault_secrets_test:
   only:
     - /^release.*$/
     - branches
+  when:  always
 
 vault_secrets_prod:
   extends: .vault_secrets
@@ -33,4 +34,4 @@ vault_secrets_prod:
     - echo MINIO_ACCESS_KEY_ID="$(vault kv get -field=MINIO_ACCESS_KEY_ID secrets/goods/customers/sitemapmaker/prod)" >> ${file_with_secrets}
   only:
     - /^release.*$/
-  when: manual
+  when:  always

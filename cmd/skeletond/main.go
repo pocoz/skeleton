@@ -10,13 +10,16 @@ import (
 	"github.com/go-kit/kit/log/level"
 	"golang.org/x/time/rate"
 
-	"github.com/dieqnt/skeleton/config"
-	"github.com/dieqnt/skeleton/db/elasticsearch"
-	"github.com/dieqnt/skeleton/db/mssql"
-	"github.com/dieqnt/skeleton/services/httpserver"
-	"github.com/dieqnt/skeleton/services/memlogger"
-	"github.com/dieqnt/skeleton/services/scheduler"
-	"github.com/dieqnt/skeleton/services/scrollsvc"
+	"github.com/pocoz/skeleton/config"
+	"github.com/pocoz/skeleton/db/elasticsearch"
+	"github.com/pocoz/skeleton/db/mssql"
+	"github.com/pocoz/skeleton/db/postgres"
+	"github.com/pocoz/skeleton/db/postgres/migrator"
+	"github.com/pocoz/skeleton/models"
+	"github.com/pocoz/skeleton/services/httpserver"
+	"github.com/pocoz/skeleton/services/memlogger"
+	"github.com/pocoz/skeleton/services/scheduler"
+	"github.com/pocoz/skeleton/services/scrollsvc"
 )
 
 func main() {
@@ -69,6 +72,38 @@ func main() {
 	})
 	if err != nil {
 		level.Error(logger).Log("msg", "failed to initialize mssql", "err", err)
+		os.Exit(exitCodeFailure)
+	}
+
+	credentialsPostgres := &models.CredentialsDB{
+		Server:   cfg.PostgresServer,
+		Port:     cfg.PostgresPort,
+		User:     cfg.PostgresUser,
+		Password: cfg.PostgresPassword,
+		Database: cfg.PostgresDatabase,
+	}
+
+	migratorPostgres := migrator.New(&migrator.Config{
+		Context:       ctx,
+		Logger:        logger,
+		CredentialsDB: credentialsPostgres,
+		Folder:        cfg.PostgresMigrationsFolder,
+		Table:         cfg.PostgresMigrationsTable,
+	})
+	err = migratorPostgres.Run()
+	if err != nil {
+		level.Error(logger).Log("msg", "migrations was failure", "err", err)
+		os.Exit(exitCodeFailure)
+	}
+
+	storePostgres, err := postgres.New(&postgres.Config{
+		Context:       ctx,
+		Logger:        logger,
+		MaxButchSize:  cfg.PostgresMaxButchSize,
+		CredentialsDB: credentialsPostgres,
+	})
+	if err != nil {
+		level.Error(logger).Log("msg", "failed to initialize postgres", "err", err)
 		os.Exit(exitCodeFailure)
 	}
 
@@ -129,6 +164,7 @@ func main() {
 			schedulerSVC.Shutdown() // Stop all running tasks
 			engineMSSQL.Shutdown()  // Close mssql connection
 			engineES.Shutdown()     // Close elasticsearch connection
+			storePostgres.Shutdown()
 			signal.Stop(sigc)
 			close(donec)
 		case <-errc:

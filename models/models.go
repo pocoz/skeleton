@@ -4,6 +4,13 @@ import (
 	"database/sql"
 	"sync"
 	"time"
+
+	"github.com/golang-sql/civil"
+)
+
+const (
+	RetryFibonacciTimeFactor = 10 * time.Millisecond
+	RetryFibonacciAmount     = 7
 )
 
 // Offer ...
@@ -92,4 +99,33 @@ type ScrollIdent struct {
 	ScrollID      string    `json:"scroll_id"       bson:"scroll_id"`
 	UpsertDate    time.Time `json:"upsert_date"     bson:"upsert_date"`
 	IsDone        bool      `json:"is_done"         bson:"is_done"`
+}
+
+type QueryOptions struct {
+	Query   string
+	Timeout time.Duration
+}
+
+type CredentialsDB struct {
+	Server   string
+	Port     string
+	User     string
+	Password string
+	Database string
+}
+
+type StatisticsPostgres struct {
+	AdvertID        string
+	AdvertName      string
+	AdvertiserName  string
+	CampaignName    string
+	Views           int64
+	Clicks          int64
+	CTR             float64
+	Orders          int64
+	CR              float64
+	GMV             int64
+	ActionDate      civil.Date
+	AdvertStartDate civil.Date
+	AdvertEndDate   civil.Date
 }

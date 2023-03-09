@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/dieqnt/skeleton/api/dto"
+	"github.com/pocoz/skeleton/api/dto"
 )
 
 // Service.Template encoder/decoder

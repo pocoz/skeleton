@@ -6,7 +6,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 
-	"github.com/dieqnt/skeleton/models"
+	"github.com/pocoz/skeleton/models"
 )
 
 // loggingMiddleware wraps Service and logs request information to the provided Logger.

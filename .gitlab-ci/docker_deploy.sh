@@ -3,10 +3,10 @@
 set +x
 set -e
 
-TAG="${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:${CI_COMMIT_REF_SLUG}-${CI_PIPELINE_ID}"
+TAG="${DOCKER_REGISTRY}/${CI_PROJECT_NAME}:${CI_COMMIT_REF_SLUG}-${CI_PIPELINE_ID}"
 
 for host in ${DEPLOY_HOST_VR}; do
-        echo --- Deploying to ${host} ---;
+        echo --- Deploying to "${host}" ---;
         export DOCKER_HOST=tcp://${host}:2375;
         echo Pulling image "${TAG}"...;
         pulled_image=$(docker pull "${TAG}" -q);
@@ -17,7 +17,11 @@ for host in ${DEPLOY_HOST_VR}; do
           echo Starting new "${CI_PROJECT_NAME}" container without port...;
           docker run -d \
             --name "${CONTAINER_NAME}" \
-            --log-driver fluentd --log-opt fluentd-address="${FLUENTD_ADDRESS}":"${FLUENTD_HAPROXY_PORT}" --log-opt tag="${FLUENTD_TAG}" --log-opt mode=non-blocking --log-opt max-buffer-size=300m --log-opt fluentd-sub-second-precision="true" \
+            --log-driver "${EVK_LOG_DRIVER}" \
+            --log-opt syslog-address=tcp://"${VECTOR_HAPROXY_HOST}":"${VECTOR_HAPROXY_SERVICE_PORT}" \
+            --log-opt syslog-format="${EVK_FORMAT_LOG}" \
+            --log-opt mode="${EVK_LOG_MODE}"\
+            --log-opt tag="${VECTOR_TAG}"  \
             --dns "${NAMESERVER_0}" \
             --dns "${NAMESERVER_1}" \
             --restart unless-stopped \
