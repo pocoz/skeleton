@@ -73,7 +73,7 @@ func DecodeBasicRequest(r *http.Request) ([]byte, error) {
 func EncodeError(_ context.Context, err error, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(NewBasicResponse(true, err, nil))
+	_ = json.NewEncoder(w).Encode(NewBasicResponse(true, err.Error(), nil))
 }
 
 func ApplyMiddleware(e endpoint.Endpoint, limiter *rate.Limiter) endpoint.Endpoint {
