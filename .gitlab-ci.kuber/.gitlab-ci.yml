@@ -30,16 +30,9 @@ build:
 
 lint:
   stage: lint
-  image: registry.gitlab.com/gitlab-org/gitlab-build-images:golangci-lint-alpine
+  image: docker-proxy.goodsteam.tech/golangci/golangci-lint:latest
   script:
-    - "[ -e .golangci.yml ] || cp /golangci/.golangci.yml ."
-    - golangci-lint run -c .golangci.yml --new-from-rev=HEAD~ --out-format code-climate | tee gl-code-quality-report.json | jq -r '.[] | "\(.location.path):\(.location.lines.begin) \(.description)"'
-  artifacts:
-    reports:
-      codequality: gl-code-quality-report.json
-    paths:
-      - gl-code-quality-report.json
-    expire_in: 1 week
+    - golangci-lint run
   allow_failure: true
   tags:
     - docker-runner

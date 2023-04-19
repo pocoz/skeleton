@@ -2,26 +2,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ${APP}
-  namespace: ${KUBE_NAMESPACE}
+  name: #[[\$]]#{APP}
+  namespace: #[[\$]]#{KUBE_NAMESPACE}
   labels:
-    k8s-app: ${APP}
+    k8s-app: #[[\$]]#{APP}
     version: v1
 spec:
   replicas: 0
   selector:
     matchLabels:
-      k8s-app: ${APP}
+      k8s-app: #[[\$]]#{APP}
       version: v1
   template:
     metadata:
       labels:
-        k8s-app: ${APP}
+        k8s-app: #[[\$]]#{APP}
         version: v1
     spec:
       containers:
-        - name: ${APP}
-          image: ${DOCKER_REGISTRY}/${CI_PROJECT_NAME}:${CI_COMMIT_REF_SLUG}-${CI_PIPELINE_ID}
+        - name: #[[\$]]#{APP}
+          image: #[[\$]]#{DOCKER_REGISTRY}/#[[\$]]#{CI_PROJECT_NAME}:#[[\$]]#{CI_COMMIT_REF_SLUG}-#[[\$]]#{CI_PIPELINE_ID}
           resources:
             limits:
               memory: 4096Mi
@@ -31,10 +31,10 @@ spec:
               memory: 2048Mi
           envFrom:
             - configMapRef:
-                name: ${APP}
+                name: #[[\$]]#{APP}
             - secretRef:
-                name: ${APP}
-        - name: ${APP}-vector
+                name: #[[\$]]#{APP}
+        - name: #[[\$]]#{APP}-vector
           image: docker-registry.prod.lan/vector:k8s
           imagePullPolicy: Always
           resources:
@@ -49,7 +49,7 @@ spec:
               value: "/etc/vector/vector.yaml"
           envFrom:
             - configMapRef:
-                name: ${APP}-vector-env
+                name: #[[\$]]#{APP}-vector-env
             - secretRef:
                 name: elasticsearch
           volumeMounts:
@@ -64,17 +64,17 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    k8s-app: ${APP}
+    k8s-app: #[[\$]]#{APP}
     version: v1
-  name: ${APP}
-  namespace: ${KUBE_NAMESPACE}
+  name: #[[\$]]#{APP}
+  namespace: #[[\$]]#{KUBE_NAMESPACE}
 spec:
   ports:
-    - name: "${HTTP_PORT}"
-      port: ${HTTP_PORT}
-      targetPort: ${HTTP_PORT}
+    - name: "#[[\$]]#{HTTP_PORT}"
+      port: #[[\$]]#{HTTP_PORT}
+      targetPort: #[[\$]]#{HTTP_PORT}
   selector:
-    k8s-app: ${APP}
+    k8s-app: #[[\$]]#{APP}
     version: v1
 status:
   loadBalancer: {}
@@ -82,55 +82,43 @@ status:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: ${APP}-ingress
-  namespace: ${KUBE_NAMESPACE}
+  name: #[[\$]]#{APP}-ingress
+  namespace: #[[\$]]#{KUBE_NAMESPACE}
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
-    - host: ${APP}.k8s.test.goods.local
+    - host: #[[\$]]#{APP}.k8s.test.goods.local
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: ${APP}
+                name: #[[\$]]#{APP}
                 port:
-                  number: ${HTTP_PORT}
+                  number: #[[\$]]#{HTTP_PORT}
 ---
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: ${APP}
-  namespace: ${KUBE_NAMESPACE}
+  name: #[[\$]]#{APP}
+  namespace: #[[\$]]#{KUBE_NAMESPACE}
 data:
-  BASE_SUB_FOLDER: "${BASE_SUB_FOLDER}"
-  CRON_PATTERN_MAKER: "${CRON_PATTERN_MAKER}"
-  ELASTIC_SERVER: "${ELASTIC_SERVER}"
-  FLUENTD_SIDECAR_ADDRESS: "${FLUENTD_SIDECAR_ADDRESS}"
-  HTTP_PORT: "${HTTP_PORT}"
-  IS_DEVELOPMENT: "${IS_DEVELOPMENT}"
-  MAX_COUNT_PARTS: "${MAX_COUNT_PARTS}"
-  MINIO_BUCKET_NAME: "${MINIO_BUCKET_NAME}"
-  MINIO_FOLDER_NAME: "${MINIO_FOLDER_NAME}"
-  MINIO_URL: "${MINIO_URL}"
-  RATE_LIMIT_BURST: "${BQ_INFRA_RESULT_FILENAME_PREFIX}"
-  RATE_LIMIT_EVERY: "${RATE_LIMIT_EVERY}"
-  SITE_BASE_HOST: "${SITE_BASE_HOST}"
-  SQL_DATABASE_MALIBU: "${SQL_DATABASE_MALIBU}"
-  SQL_PORT_MALIBU: "${SQL_PORT_MALIBU}"
-  SQL_SERVER_MALIBU: "${SQL_SERVER_MALIBU}"
+  TASK_SEO_WORK_IS_ACTIVE: "#[[\$]]#{TASK_SEO_WORK_IS_ACTIVE}"
+  TASK_SEO_WORK_CRON_PATTERN: "#[[\$]]#{TASK_SEO_WORK_CRON_PATTERN}"
+  TASK_SEO_WORK_NAME: "#[[\$]]#{TASK_SEO_WORK_NAME}"
+  MDWH_SEO_DATABASE: "#[[\$]]#{MDWH_SEO_DATABASE}"
+  MDWH_SEO_PORT: "#[[\$]]#{MDWH_SEO_PORT}"
+  MDWH_SEO_SERVER: "#[[\$]]#{MDWH_SEO_SERVER}"
+  HTTP_PORT: "#[[\$]]#{HTTP_PORT}"
 ---
 kind: Secret
 apiVersion: v1
 metadata:
-  name: ${APP}
-  namespace: ${KUBE_NAMESPACE}
+  name: #[[\$]]#{APP}
+  namespace: #[[\$]]#{KUBE_NAMESPACE}
 stringData:
-  ELASTIC_USER: "${ELASTIC_USER}"
-  ELASTIC_PASSWORD: "${ELASTIC_PASSWORD}"
-  SQL_USER_MALIBU: "${SQL_USER_MALIBU}"
-  SQL_PASSWORD_MALIBU: "${SQL_PASSWORD_MALIBU}"
-  MINIO_SECRET_ACCESS_KEY: "${MINIO_SECRET_ACCESS_KEY}"
-  MINIO_ACCESS_KEY_ID: "${MINIO_SECRET_ACCESS_KEY}"
+  SEO_WORK_TOKEN: "#[[\$]]#{SEO_WORK_TOKEN}"
+  MDWH_SEO_PASSWORD: "#[[\$]]#{MDWH_SEO_PASSWORD}"
+  MDWH_SEO_USER: "#[[\$]]#{MDWH_SEO_USER}"
