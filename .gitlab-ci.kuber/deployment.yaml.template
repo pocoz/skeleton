@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: ${APP}
-          image: ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:${CI_COMMIT_REF_SLUG}-${CI_PIPELINE_ID}
+          image: ${DOCKER_REGISTRY}/${CI_PROJECT_NAME}:${CI_COMMIT_REF_SLUG}-${CI_PIPELINE_ID}
           resources:
             limits:
               memory: ${MEM_LIM}
