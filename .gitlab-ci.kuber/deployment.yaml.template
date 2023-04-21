@@ -2,59 +2,40 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: #[[\$]]#{APP}
-  namespace: #[[\$]]#{KUBE_NAMESPACE}
+  name: ${APP}
+  namespace: ${KUBE_NAMESPACE}
   labels:
-    k8s-app: #[[\$]]#{APP}
+    k8s-app: ${APP}
     version: v1
 spec:
-  replicas: 0
+  replicas: ${REPLICA_COUNT}
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
-      k8s-app: #[[\$]]#{APP}
+      k8s-app: ${APP}
       version: v1
   template:
     metadata:
       labels:
-        k8s-app: #[[\$]]#{APP}
+        k8s-app: ${APP}
         version: v1
     spec:
       containers:
-        - name: #[[\$]]#{APP}
-          image: #[[\$]]#{DOCKER_REGISTRY}/#[[\$]]#{CI_PROJECT_NAME}:#[[\$]]#{CI_COMMIT_REF_SLUG}-#[[\$]]#{CI_PIPELINE_ID}
+        - name: ${APP}
+          image: ${DOCKER_REGISTRY}/${DOCKER_IMAGE_NAME}:${CI_COMMIT_REF_SLUG}-${CI_PIPELINE_ID}
           resources:
             limits:
-              memory: 4096Mi
-              cpu: 100m
+              memory: ${MEM_LIM}
+              cpu: ${CPU_LIM}
             requests:
-              cpu: 100m
-              memory: 2048Mi
+              cpu: ${CPU_REC}
+              memory: ${MEM_REC}
           envFrom:
             - configMapRef:
-                name: #[[\$]]#{APP}
+                name: ${APP}
             - secretRef:
-                name: #[[\$]]#{APP}
-        - name: #[[\$]]#{APP}-vector
-          image: docker-registry.prod.lan/vector:k8s
-          imagePullPolicy: Always
-          resources:
-            limits:
-              memory: 200Mi
-              cpu: 100m
-            requests:
-              cpu: 100m
-              memory: 100Mi
-          env:
-            - name: VECTOR_CONFIG_YAML
-              value: "/etc/vector/vector.yaml"
-          envFrom:
-            - configMapRef:
-                name: #[[\$]]#{APP}-vector-env
-            - secretRef:
-                name: elasticsearch
-          volumeMounts:
-            - name: varlog
-              mountPath: /var/log
+                name: ${APP}
       volumes:
         - name: varlog
           hostPath:
@@ -64,17 +45,17 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    k8s-app: #[[\$]]#{APP}
+    k8s-app: ${APP}
     version: v1
-  name: #[[\$]]#{APP}
-  namespace: #[[\$]]#{KUBE_NAMESPACE}
+  name: ${APP}
+  namespace: ${KUBE_NAMESPACE}
 spec:
   ports:
-    - name: "#[[\$]]#{HTTP_PORT}"
-      port: #[[\$]]#{HTTP_PORT}
-      targetPort: #[[\$]]#{HTTP_PORT}
+    - name: "${HTTP_PORT}"
+      port: ${HTTP_PORT}
+      targetPort: ${HTTP_PORT}
   selector:
-    k8s-app: #[[\$]]#{APP}
+    k8s-app: ${APP}
     version: v1
 status:
   loadBalancer: {}
@@ -82,43 +63,70 @@ status:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: #[[\$]]#{APP}-ingress
-  namespace: #[[\$]]#{KUBE_NAMESPACE}
+  name: ${APP}-ingress
+  namespace: ${KUBE_NAMESPACE}
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
-    - host: #[[\$]]#{APP}.k8s.test.goods.local
+    - host: ${INGRESS_VALUES}
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: #[[\$]]#{APP}
+                name: ${APP}
                 port:
-                  number: #[[\$]]#{HTTP_PORT}
+                  number: ${HTTP_PORT}
 ---
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: #[[\$]]#{APP}
-  namespace: #[[\$]]#{KUBE_NAMESPACE}
+  name: ${APP}
+  namespace: ${KUBE_NAMESPACE}
 data:
-  TASK_SEO_WORK_IS_ACTIVE: "#[[\$]]#{TASK_SEO_WORK_IS_ACTIVE}"
-  TASK_SEO_WORK_CRON_PATTERN: "#[[\$]]#{TASK_SEO_WORK_CRON_PATTERN}"
-  TASK_SEO_WORK_NAME: "#[[\$]]#{TASK_SEO_WORK_NAME}"
-  MDWH_SEO_DATABASE: "#[[\$]]#{MDWH_SEO_DATABASE}"
-  MDWH_SEO_PORT: "#[[\$]]#{MDWH_SEO_PORT}"
-  MDWH_SEO_SERVER: "#[[\$]]#{MDWH_SEO_SERVER}"
-  HTTP_PORT: "#[[\$]]#{HTTP_PORT}"
+  HTTP_PORT: "${HTTP_PORT}"
+  ELASTIC_READ_SERVER: "${ELASTIC_READ_SERVER}"
+  ELASTIC_WRITE_SERVER: "${ELASTIC_WRITE_SERVER}"
+  MALIBU_SERVER: "${MALIBU_SERVER}"
+  MALIBU_PORT: "${MALIBU_PORT}"
+  MALIBU_DATABASE: "${MALIBU_DATABASE}"
+  DATA_HUB_SERVER: "${DATA_HUB_SERVER}"
+  DATA_HUB_PORT: "${DATA_HUB_PORT}"
+  DATA_HUB_DATABASE: "${DATA_HUB_DATABASE}"
+  MARKET_SERVER: "${MARKET_SERVER}"
+  MARKET_PORT: "${MARKET_PORT}"
+  MARKET_DATABASE: "${MARKET_DATABASE}"
+  HRU_SERVER: "${HRU_SERVER}"
+  HRU_PORT: "${HRU_PORT}"
+  HRU_DATABASE: "${HRU_DATABASE}"
+  KAFKA_BROKERS: "${KAFKA_BROKERS}"
+  KAFKA_TOPIC_META_ITEMS_CREATED: "${KAFKA_TOPIC_META_ITEMS_CREATED}"
+  KAFKA_TOPIC_META_ITEMS_UPDATED: "${KAFKA_TOPIC_META_ITEMS_UPDATED}"
+  KAFKA_TOPIC_META_ITEMS_DELETED: "${KAFKA_TOPIC_META_ITEMS_DELETED}"
+  KAFKA_TOPIC_TEXT_ITEMS_CREATED: "${KAFKA_TOPIC_TEXT_ITEMS_CREATED}"
+  KAFKA_TOPIC_TEXT_ITEMS_UPDATED: "${KAFKA_TOPIC_TEXT_ITEMS_UPDATED}"
+  KAFKA_TOPIC_TEXT_ITEMS_DELETED: "${KAFKA_TOPIC_TEXT_ITEMS_DELETED}"
+  KAFKA_TOPIC_ITEM_CREATED: "${KAFKA_TOPIC_ITEM_CREATED}"
+  KAFKA_TOPIC_UNIQUE_UPDATED: "${KAFKA_TOPIC_UNIQUE_UPDATED}"
+  KAFKA_TOPIC_UNIQUE_DELETED: "${KAFKA_TOPIC_UNIQUE_DELETED}"
 ---
 kind: Secret
 apiVersion: v1
 metadata:
-  name: #[[\$]]#{APP}
-  namespace: #[[\$]]#{KUBE_NAMESPACE}
+  name: ${APP}
+  namespace: ${KUBE_NAMESPACE}
 stringData:
-  SEO_WORK_TOKEN: "#[[\$]]#{SEO_WORK_TOKEN}"
-  MDWH_SEO_PASSWORD: "#[[\$]]#{MDWH_SEO_PASSWORD}"
-  MDWH_SEO_USER: "#[[\$]]#{MDWH_SEO_USER}"
+  ELASTIC_READ_USER: "${ELASTIC_READ_USER}"
+  ELASTIC_READ_PASSWORD: "${ELASTIC_READ_PASSWORD}"
+  ELASTIC_WRITE_USER: "${ELASTIC_WRITE_USER}"
+  ELASTIC_WRITE_PASSWORD: "${ELASTIC_WRITE_PASSWORD}"
+  MALIBU_USER: "${MALIBU_USER}"
+  MALIBU_PASSWORD: "${MALIBU_PASSWORD}"
+  DATA_HUB_USER: "${DATA_HUB_USER}"
+  DATA_HUB_PASSWORD: "${DATA_HUB_PASSWORD}"
+  MARKET_USER: "${MARKET_USER}"
+  MARKET_PASSWORD: "${MARKET_PASSWORD}"
+  HRU_USER: "${HRU_USER}"
+  HRU_PASSWORD: "${HRU_PASSWORD}"
